@@ -1,0 +1,50 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ticketguard_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-ticketguard_db}
+      MYSQL_USER: ${DB_USER:-ticketguard}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ticketguard123}
+      MYSQL_ROOT_PASSWORD: root123
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ticketguard_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ticketguard_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

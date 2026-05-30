@@ -1,0 +1,55 @@
+erDiagram
+    USERS ||--o{ EVENTS : creates
+    USERS ||--o{ OFFERS : publishes
+    USERS ||--o{ TICKETS : owns
+    EVENTS ||--o{ OFFERS : has
+    EVENTS ||--o{ TICKETS : emits
+    OFFERS ||--o{ TICKETS : generates
+
+    USERS {
+        uint id PK
+        string name
+        string email UK
+        string password_hash
+        string role
+        decimal balance
+        datetime created_at
+    }
+
+    EVENTS {
+        uint id PK
+        string title
+        string description
+        string category
+        string location
+        datetime starts_at
+        int duration_minutes
+        int capacity
+        string image_url
+        string status
+        uint created_by_id FK
+    }
+
+    OFFERS {
+        uint id PK
+        uint event_id FK
+        uint seller_id FK
+        string title
+        decimal price
+        int quantity
+        string external_url
+        string scan_status
+        string scan_verdict
+        string status
+    }
+
+    TICKETS {
+        uint id PK
+        string code UK
+        uint event_id FK
+        uint offer_id FK
+        uint owner_id FK
+        decimal price
+        string status
+        datetime created_at
+    }
