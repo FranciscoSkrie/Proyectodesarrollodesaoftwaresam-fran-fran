@@ -1,0 +1,74 @@
+erDiagram
+    USERS ||--o{ EVENTS : creates
+    USERS ||--o{ TICKETS : owns
+    USERS ||--o{ OFFERS : publishes
+    EVENTS ||--o{ TICKETS : has
+    EVENTS ||--o{ OFFERS : contains
+    TICKETS ||--o{ OFFERS : listed_in
+    OFFERS ||--o{ EXCHANGE_REQUESTS : receives
+    USERS ||--o{ EXCHANGE_REQUESTS : requester
+    USERS ||--o{ EXCHANGE_REQUESTS : receiver
+    TICKETS ||--o{ EXCHANGE_REQUESTS : offered_ticket
+    TICKETS ||--o{ EXCHANGE_REQUESTS : target_ticket
+
+    USERS {
+      uint id PK
+      string name
+      string email UK
+      string password_hash
+      string role
+      decimal balance
+    }
+
+    EVENTS {
+      uint id PK
+      string title
+      string category
+      string location
+      datetime starts_at
+      int capacity
+      decimal entry_price
+      string status
+      uint created_by_id FK
+    }
+
+    TICKETS {
+      uint id PK
+      string code UK
+      uint event_id FK
+      uint owner_id FK
+      uint offer_id
+      decimal price
+      string seat_info
+      string description
+      string status
+    }
+
+    OFFERS {
+      uint id PK
+      uint event_id FK
+      uint seller_id FK
+      uint ticket_id FK
+      string title
+      decimal price
+      int quantity
+      text external_url
+      text contact_info
+      text exchange_details
+      string scan_status
+      string status
+      bool alert_cleared
+      text telemetry_json
+    }
+
+    EXCHANGE_REQUESTS {
+      uint id PK
+      uint offer_id FK
+      uint event_id FK
+      uint requester_id FK
+      uint receiver_id FK
+      uint offered_ticket_id FK
+      uint target_ticket_id FK
+      decimal price_difference
+      string status
+    }

@@ -1,0 +1,78 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ticketguard_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:?Copiá .env.example a .env y configurá DB_NAME}
+      MYSQL_USER: ${DB_USER:?Configurá DB_USER en .env}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Configurá DB_PASSWORD en .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Configurá MYSQL_ROOT_PASSWORD en .env}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ticketguard_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USER:?Configurá DB_USER en .env}
+      PMA_PASSWORD: ${DB_PASSWORD:?Configurá DB_PASSWORD en .env}
+    ports:
+      - "8081:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+    container_name: ticketguard_backend
+    restart: unless-stopped
+    environment:
+      APP_PORT: 8080
+      APP_ENV: ${APP_ENV:-production}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:?Configurá DB_USER en .env}
+      DB_PASSWORD: ${DB_PASSWORD:?Configurá DB_PASSWORD en .env}
+      DB_NAME: ${DB_NAME:?Configurá DB_NAME en .env}
+      JWT_SECRET: ${JWT_SECRET:?Configurá JWT_SECRET en .env}
+      JWT_EXP_HOURS: ${JWT_EXP_HOURS:-8}
+      VT_API_KEY: ${VT_API_KEY:-}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: ticketguard_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://localhost:8080/api
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:

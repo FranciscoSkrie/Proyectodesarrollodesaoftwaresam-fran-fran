@@ -1,0 +1,6 @@
+tmp
+coverage.out
+*.test
+ticketguard
+main
+.DS_Store
